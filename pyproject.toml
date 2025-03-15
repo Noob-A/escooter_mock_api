@@ -3,14 +3,16 @@ name = "escooter-mock-api"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "n/a",email = "bromine636@example.com"}
+    {name = "waromiv",email = "bromine636@example.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi (>=0.115.11,<0.116.0)",
     "sqlalchemy (>=2.0.39,<3.0.0)",
-    "faker (>=37.0.0,<38.0.0)"
+    "faker (>=37.0.0,<38.0.0)",
+    "uvicorn (>=0.34.0,<0.35.0)",
+    "asyncpg (>=0.30.0,<0.31.0)"
 ]
 
 
