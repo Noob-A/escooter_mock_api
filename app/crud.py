@@ -50,4 +50,8 @@ def create_rental(db: Session, rental: schemas.RentalCreate, user_id: int):
     db.refresh(db_rental)
     return db_rental
 
+def count_active_rentals(db: Session, user_id: int):
+    from app.models import Rental  # Import here if not imported at the top
+    return db.query(Rental).filter(Rental.user_id == user_id, Rental.is_finished == False).count()
+
 # Note: Do not implement delete_rental for rentals as they are not allowed to be deleted.

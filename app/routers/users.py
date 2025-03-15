@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import random
@@ -10,12 +10,17 @@ from app.config import CITY, FAILURE_CHANCE_PERCENT, FAILURE_REASONS
 router = APIRouter()
 fake = Faker(locale='ru')
 
+
 @router.post("/generate", response_model=dict)
 def generate_random_data(
-    db: Session = Depends(database.get_db),
-    user_id: int = Depends(dependencies.get_current_user_id)
+        db: Session = Depends(database.get_db),
+        user_id: int = Depends(dependencies.get_current_user_id)
 ):
-    # Generate random scooter data using a random model and a street address from the specified city.
+    # Check if user already has 3 active rentals.
+    if crud.count_active_rentals(db, user_id) >= 3:
+        raise HTTPException(status_code=400, detail="Maximum number of active rentals reached")
+
+    # Generate random scooter data.
     scooter_models = ["P12", "X20", "E5", "S3"]
     scooter_location = f"{fake.street_address()}, {CITY}"
     random_scooter = schemas.ScooterCreate(
@@ -24,12 +29,11 @@ def generate_random_data(
     )
     created_scooter = crud.create_scooter(db, random_scooter, user_id)
 
-    # Generate random rental data for the created scooter.
+    # Generate random rental data.
     now = datetime.utcnow()
     start_time = now - timedelta(hours=random.randint(1, 5))
     end_time = start_time + timedelta(hours=1)
 
-    # Determine payment status based on configurable failure chance.
     if random.randint(1, 100) <= FAILURE_CHANCE_PERCENT:
         payment_status = "failed"
         failure_reason = random.choice(FAILURE_REASONS)
@@ -50,7 +54,6 @@ def generate_random_data(
     )
     created_rental = crud.create_rental(db, random_rental, user_id)
 
-    # Return Pydantic models for proper serialization.
     return {
         "scooter": schemas.Scooter.model_validate(created_scooter),
         "rental": schemas.Rental.model_validate(created_rental)
