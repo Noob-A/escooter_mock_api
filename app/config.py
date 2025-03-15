@@ -1,8 +1,8 @@
-# City used for generating street addresses.
+# Specify the city used for generating street addresses.
 CITY = "Moscow"
 
 # Percentage chance (0-100) that a rental payment will fail.
-FAILURE_CHANCE_PERCENT = 20
+FAILURE_CHANCE_PERCENT = 30
 
 # List of possible failure reasons.
 FAILURE_REASONS = [

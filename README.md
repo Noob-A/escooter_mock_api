@@ -1,4 +1,4 @@
-# EScooter mock api
+# EScooter Mock API
 ## Install project
 ```shell
 poetry install

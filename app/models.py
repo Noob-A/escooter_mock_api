@@ -31,6 +31,7 @@ class Rental(Base):
     end_location = Column(String, nullable=False)
     payment_status = Column(String, default="pending")
     failure_reason = Column(String, nullable=True)
+    is_finished = Column(Boolean, default=False)
     user_id = Column(Integer, nullable=False, index=True)
 
     scooter = relationship("Scooter", back_populates="rentals")

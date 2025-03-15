@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from datetime import datetime
 from app import crud, schemas, database, dependencies
 
 router = APIRouter()
 
-@router.get("/", response_model=List[schemas.Rental])
+@router.get("/", response_model=list[schemas.Rental])
 def read_rentals(
     skip: int = 0,
     limit: int = 100,
@@ -13,7 +13,7 @@ def read_rentals(
     user_id: int = Depends(dependencies.get_current_user_id)
 ):
     rentals = crud.get_rentals(db, user_id=user_id, skip=skip, limit=limit)
-    return rentals
+    return [schemas.Rental.model_validate(r) for r in rentals]
 
 @router.post("/", response_model=schemas.Rental)
 def create_rental(
@@ -21,7 +21,8 @@ def create_rental(
     db: Session = Depends(database.get_db),
     user_id: int = Depends(dependencies.get_current_user_id)
 ):
-    return crud.create_rental(db, rental, user_id)
+    created_rental = crud.create_rental(db, rental, user_id)
+    return schemas.Rental.model_validate(created_rental)
 
 @router.get("/{rental_id}", response_model=schemas.Rental)
 def read_rental(
@@ -29,30 +30,24 @@ def read_rental(
     db: Session = Depends(database.get_db),
     user_id: int = Depends(dependencies.get_current_user_id)
 ):
-    db_rental = crud.get_rental(db, rental_id, user_id)
-    if db_rental is None:
+    rental = crud.get_rental(db, rental_id, user_id)
+    if not rental:
         raise HTTPException(status_code=404, detail="Rental not found")
-    return db_rental
+    return schemas.Rental.model_validate(rental)
 
-@router.put("/{rental_id}", response_model=schemas.Rental)
-def update_rental(
-    rental_id: int,
-    rental: schemas.RentalUpdate,
-    db: Session = Depends(database.get_db),
-    user_id: int = Depends(dependencies.get_current_user_id)
-):
-    db_rental = crud.update_rental(db, rental_id, rental, user_id)
-    if db_rental is None:
-        raise HTTPException(status_code=404, detail="Rental not found")
-    return db_rental
-
-@router.delete("/{rental_id}", response_model=schemas.Rental)
-def delete_rental(
+@router.post("/{rental_id}/end", response_model=schemas.Rental)
+def end_rental(
     rental_id: int,
     db: Session = Depends(database.get_db),
     user_id: int = Depends(dependencies.get_current_user_id)
 ):
-    db_rental = crud.delete_rental(db, rental_id, user_id)
-    if db_rental is None:
+    rental = crud.get_rental(db, rental_id, user_id)
+    if not rental:
         raise HTTPException(status_code=404, detail="Rental not found")
-    return db_rental
+    if rental.is_finished:
+        raise HTTPException(status_code=409, detail="Rental is already finished")
+    rental.is_finished = True
+    rental.end_time = datetime.utcnow()  # Optionally update end_time to current time
+    db.commit()
+    db.refresh(rental)
+    return schemas.Rental.model_validate(rental)

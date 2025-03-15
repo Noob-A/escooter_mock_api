@@ -10,11 +10,10 @@ from app.config import CITY, FAILURE_CHANCE_PERCENT, FAILURE_REASONS
 router = APIRouter()
 fake = Faker(locale='ru')
 
-
 @router.post("/generate", response_model=dict)
 def generate_random_data(
-        db: Session = Depends(database.get_db),
-        user_id: int = Depends(dependencies.get_current_user_id)
+    db: Session = Depends(database.get_db),
+    user_id: int = Depends(dependencies.get_current_user_id)
 ):
     # Generate random scooter data using a random model and a street address from the specified city.
     scooter_models = ["P12", "X20", "E5", "S3"]
