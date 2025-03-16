@@ -30,4 +30,4 @@ COPY . .
 EXPOSE 15022
 
 # Run the FastAPI application on port 15022.
-CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "15022"]
+CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "15022", "--root-path", "/api/mock/escooter"]
